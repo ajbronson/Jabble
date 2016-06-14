@@ -1,0 +1,31 @@
+//
+//  AllMessageTableViewCell.swift
+//  Jabble
+//
+//  Created by AJ Bronson on 6/10/16.
+//  Copyright © 2016 PrecisionCodes. All rights reserved.
+//
+
+import UIKit
+
+class AllMessageTableViewCell: UITableViewCell {
+
+    @IBOutlet weak var groupNameLabel: UILabel!
+    @IBOutlet weak var groupMembersCell: UILabel!
+    @IBOutlet weak var groupMessageLabel: UILabel!
+    
+    func updateWith(group:Group, messages: [Message], users: [User]) {
+        groupNameLabel.text = group.name
+        var userText = ""
+        for user in users {
+            userText += "\(user.firstName) \(user.lastName)"
+        }
+        groupMembersCell.text = userText
+        if let lastMessage = messages.last {
+            groupMessageLabel.text = lastMessage.text
+        } else {
+            groupMessageLabel.text = "(No Messages Yet)"
+        }
+    }
+
+}
