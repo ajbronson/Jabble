@@ -35,6 +35,7 @@ class AllMessagesTableViewController: UITableViewController {
             if let user = user {
                 UserController.currentUser = user
                 GroupController.observeGroups { (groups) in
+                    let groups = groups.sort({$0.dateCreated < $1.dateCreated})
                     GroupController.observeMessagesInGroups(groups, completion: { (messages) in
                         let sortedMessages = messages.sort({$0.dateCreated < $1.dateCreated})
                         self.messages = sortedMessages
@@ -50,11 +51,6 @@ class AllMessagesTableViewController: UITableViewController {
                 }
             }
         }
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
 

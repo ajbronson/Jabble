@@ -71,7 +71,9 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
         memberIDs.append(id)
         let group = Group(type: "Closed", kingID: id, name: name, users: memberIDs)
         group.save()
+        sleep(1)
         dismissViewControllerAnimated(true, completion: nil)
+        
         
     }
     
@@ -162,13 +164,18 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     }
     
     
-    /*
+    
      // Override to support conditional editing of the table view.
      override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-     // Return false if you do not want the specified item to be editable.
-     return true
+        if indexPath.section == 1 {
+            return false
+        } else if indexPath.row == 0 || indexPath.row == numberOfAddedUsers + 1 || indexPath.row == numberOfAddedUsers + 2 {
+            return false
+        } else {
+           return true
+        }
      }
-     */
+ 
     
     
     // Override to support editing the table view.
@@ -250,8 +257,9 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     func becameFirstResponder() {
         showUsers = true
         UserController.fetchAllUsers { (users) in
-            self.allUsers = users
-            self.filteredUsers = users
+            guard let id = LoginPersistenceController.loggedInUserID else { return }
+            self.allUsers = users.filter({$0.id != id})
+            self.filteredUsers = self.allUsers
             
             var indexPaths: [NSIndexPath] = [NSIndexPath]()
             for i in 0...self.allUsers.count - 1 {
