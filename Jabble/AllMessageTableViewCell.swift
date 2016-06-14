@@ -18,9 +18,17 @@ class AllMessageTableViewCell: UITableViewCell {
         groupNameLabel.text = group.name
         var userText = ""
         for user in users {
-            userText += "\(user.firstName) \(user.lastName)"
+            userText += "\(user.firstName) \(user.lastName), "
         }
-        groupMembersCell.text = userText
+        
+        if userText.characters.count > 0 {
+            userText = userText.substringToIndex(userText.endIndex.predecessor())
+            userText = userText.substringToIndex(userText.endIndex.predecessor())
+            groupMembersCell.text = userText
+        } else {
+            groupMembersCell.text = ""
+        }
+
         if let lastMessage = messages.last {
             groupMessageLabel.text = lastMessage.text
         } else {

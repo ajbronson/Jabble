@@ -76,8 +76,10 @@ class DetailMessageViewController: UIViewController, UITableViewDelegate, UITabl
                 let sortedMessages = messages.sort({$0.dateCreated < $1.dateCreated})
                 self.messages = sortedMessages
                 self.tableView.reloadData()
-                let index: NSIndexPath = NSIndexPath(forRow: messages.count - 1, inSection: 0)
-                self.tableView.scrollToRowAtIndexPath(index, atScrollPosition: .Top, animated: false)
+                if messages.count > 0 {
+                    let index: NSIndexPath = NSIndexPath(forRow: messages.count - 1, inSection: 0)
+                    self.tableView.scrollToRowAtIndexPath(index, atScrollPosition: .Top, animated: false)
+                }
             })
         }
     }

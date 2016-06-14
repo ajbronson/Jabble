@@ -21,7 +21,6 @@ class AddMemberTableViewCell: UITableViewCell, addMemberProtocol, UITextFieldDel
     func textFieldDidChange(textField: UITextField) {
         guard let text = addMemberTextField.text else { return }
         self.newText(text)
-        becameFirstResponder()
     }
     
     func textFieldDidBeginEditing(textField: UITextField) {
@@ -37,6 +36,7 @@ class AddMemberTableViewCell: UITableViewCell, addMemberProtocol, UITextFieldDel
     }
     
     func resignedFirstResponder() {
+        addMemberTextField.text = ""
         self.textChangeDelegate?.resignedFirstResponder()
     }
     

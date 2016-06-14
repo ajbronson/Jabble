@@ -28,7 +28,6 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     var allUsers = [User]()
     var filteredUsers = [User]()
     var addedMembers = [User]()
-    var selectedRow = 0
     
     var showUsers = false
     
@@ -63,20 +62,14 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
         self.name = name
     }
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        nameTextField?.resignFirstResponder()
-        memberTextField?.resignFirstResponder()
-        return true
-    }
-    
     
     func createGroupTapped() {
-        self.memberTextField?.resignFirstResponder()
-        self.nameTextField?.resignFirstResponder()
         
-        guard let user = UserController.currentUser, id = user.id, name = name, member = member where name.characters.count > 0 && member.characters.count > 0  else { showAlert(); return }
-        
-        let group = Group(type: "Closed", kingID: id, name: name, users: [member])
+        FirebaseController.ref.child("users").removeAllObservers()
+        guard let user = UserController.currentUser, id = user.id, name = name where name.characters.count > 0 && addedMembers.count > 0  else { showAlert(); return }
+        var memberIDs = addedMembers.flatMap({$0.id})
+        memberIDs.append(id)
+        let group = Group(type: "Closed", kingID: id, name: name, users: memberIDs)
         group.save()
         dismissViewControllerAnimated(true, completion: nil)
         
@@ -127,7 +120,7 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
                     
                 case 1...numberOfAddedUsers:
                     let cell = tableView.dequeueReusableCellWithIdentifier("memberCell", forIndexPath: indexPath)
-                    cell.textLabel?.text = addedMembers[selectedRow].displayName
+                    cell.textLabel?.text = addedMembers[indexPath.row - 1].displayName
                     //these are the added users
                     return cell
                     
@@ -180,9 +173,20 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     
     // Override to support editing the table view.
     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if indexPath.row != 0 && indexPath.row != numberOfAddedUsers + 1 && indexPath.row != numberOfAddedUsers + 2 && editingStyle == .Delete {
+        if indexPath.section == 0 && indexPath.row != 0 && indexPath.row != numberOfAddedUsers + 1 && indexPath.row != numberOfAddedUsers + 2 && editingStyle == .Delete {
             numberOfAddedUsers -= 1
+            tableView.beginUpdates()
+            
+            allUsers.append(addedMembers[indexPath.row - 1])
+            filteredUsers.append(addedMembers[indexPath.row - 1])
+            
+            let index = NSIndexPath(forRow: filteredUsers.count - 1, inSection: 1)
+            self.tableView.insertRowsAtIndexPaths([index], withRowAnimation: .Left)
+            
+            addedMembers.removeAtIndex(indexPath.row - 1)
             tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+            
+            tableView.endUpdates()
         }
         
     }
@@ -220,17 +224,19 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         if indexPath.section == 1 {
             numberOfAddedUsers += 1
-            selectedRow = indexPath.row
             addedMembers.append(filteredUsers[indexPath.row])
-//            let user = filteredUsers[indexPath.row]
-//            let myIndex = allUsers.indexOf(user)
-//            if let index = try? allUsers.indexOf(filteredUsers[indexPath.row]) {
-//                allUsers.removeAtIndex(index)
-//            }
-//            filteredUsers.removeAtIndex(indexPath.row)
+
+            let userToRemove = filteredUsers[indexPath.row]
+            if let index = allUsers.indexOf(userToRemove) {
+                allUsers.removeAtIndex(index)
+            }
+            tableView.beginUpdates()
+            filteredUsers.removeAtIndex(indexPath.row)
+            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
             
             let index = NSIndexPath(forRow: numberOfAddedUsers, inSection: 0)
             tableView.insertRowsAtIndexPaths([index], withRowAnimation: .Bottom)
+            tableView.endUpdates()
         }
     }
     
@@ -267,6 +273,68 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     }
     
     func newText(text: String) {
-        //change the cells
+        let lcText = text.lowercaseString
+        let searchArray = lcText.componentsSeparatedByString(" ").filter({!$0.isEmpty})
+        if searchArray.isEmpty {
+            tableView.beginUpdates()
+            for i in 0..<allUsers.count {
+                let user = allUsers[i]
+                if let _ = filteredUsers.indexOf(user) {
+                } else {
+                    filteredUsers.append(user)
+                    let index = NSIndexPath(forRow: filteredUsers.count - 1, inSection: 1)
+                    tableView.insertRowsAtIndexPaths([index], withRowAnimation: .Left)
+                }
+            }
+            tableView.endUpdates()
+        } else {
+            var userToRemove = [User]()
+            var usersToAdd = [User]()
+            for i in 0..<allUsers.count {
+                let user = allUsers[i]
+                var foundMatch = false
+                for searchTerm in searchArray {
+                    if user.displayName.lowercaseString.containsString(searchTerm) || user.firstName.lowercaseString.containsString(searchTerm) || user.lastName.lowercaseString.containsString(searchTerm) || user.email.lowercaseString.containsString(searchTerm) {
+                        foundMatch = true
+                        break
+                    }
+                }
+                if foundMatch {
+                    usersToAdd.append(allUsers[i])
+                } else {
+                    userToRemove.append(allUsers[i])
+                }
+            }
+            
+            tableView.beginUpdates()
+            
+            for user in usersToAdd {
+                if let _ = filteredUsers.indexOf(user) {
+                }else {
+                    filteredUsers.append(user)
+                    let index = NSIndexPath(forItem: filteredUsers.count - 1, inSection: 1)
+                    tableView.insertRowsAtIndexPaths([index], withRowAnimation: .Left)
+                }
+            }
+            
+            var usersToRemoveInFilteredArray = [User]()
+            for user in userToRemove {
+                if let index = filteredUsers.indexOf(user) {
+                    usersToRemoveInFilteredArray.append(user)
+                    let indexToRemove = NSIndexPath(forRow: Int(index), inSection: 1)
+                    tableView.deleteRowsAtIndexPaths([indexToRemove], withRowAnimation: .Bottom)
+                }
+            }
+            
+            for user in usersToRemoveInFilteredArray {
+                if let index = filteredUsers.indexOf(user) {
+                    filteredUsers.removeAtIndex(index)
+                }
+            }
+            
+            tableView.endUpdates()
+        }
+    
     }
 }
+

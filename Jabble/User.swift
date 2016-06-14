@@ -8,7 +8,7 @@
 
 import Foundation
 
-class User: FirebaseType {
+class User: FirebaseType, Equatable {
     
     private let kFirst = "first"
     private let kLast = "last"
@@ -82,3 +82,9 @@ class User: FirebaseType {
         ]
     }
 }
+
+func ==(lhs: User, rhs: User) -> Bool {
+    return lhs.id == rhs.id
+}
+
+

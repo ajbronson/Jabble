@@ -79,17 +79,39 @@ class AllMessagesTableViewController: UITableViewController {
         return cell ?? UITableViewCell()
     }
 
-    /*
+    
     // Override to support editing the table view.
     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         if editingStyle == .Delete {
-            // Delete the row from the data source
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-        } else if editingStyle == .Insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+            let group = groups[indexPath.row]
+            guard let id = group.id else { return }
+            if group.kingID == LoginPersistenceController.loggedInUserID {
+                UserController.fetchMultipleUsersWith(group.userIDs, completion: { (users) in
+                    for user in users {
+                        var user = user
+                        user.groupIDs = user.groupIDs.filter({$0 != id})
+                        user.save()
+                        //self.tableView.reloadData()
+                        //self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+                    }
+                    group.delete()
+                })
+            } else {
+                if let userID = LoginPersistenceController.loggedInUserID {
+                    UserController.fetchUserWith(userID, completion: { (user) in
+                        if let user = user {
+                            var user = user
+                            user.groupIDs = user.groupIDs.filter({$0 != id})
+                            user.save()
+                            //self.tableView.reloadData()
+                            //self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+                        }
+                    })
+                }
+            }
+        }
     }
-    */
+ 
  
     
     // MARK: - Navigation
