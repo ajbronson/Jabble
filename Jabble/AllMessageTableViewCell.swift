@@ -15,10 +15,14 @@ class AllMessageTableViewCell: UITableViewCell {
     @IBOutlet weak var groupMessageLabel: UILabel!
     
     func updateWith(group:Group, messages: [Message], users: [User]) {
+        guard let id = LoginPersistenceController.loggedInUserID else { return }
         groupNameLabel.text = group.name
+        
         var userText = ""
         for user in users {
-            userText += "\(user.firstName) \(user.lastName), "
+            if user.id != id {
+               userText += "\(user.firstName) \(user.lastName), "
+            }
         }
         
         if userText.characters.count > 0 {

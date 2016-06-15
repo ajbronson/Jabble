@@ -32,7 +32,7 @@ class GroupController {
     }
     
     static func observeGroups(completion: (groups: [Group]) -> Void) {
-        
+        var count = 0
         if let currentUser = UserController.currentUser {
             var groups: [Group] = [Group]()
             let dispatchGroup = dispatch_group_create()
@@ -40,17 +40,32 @@ class GroupController {
                 dispatch_group_enter(dispatchGroup)
                 let groupRef = FirebaseController.ref.child("groups").child(groupID)
                 groupRef.observeEventType(.Value, withBlock: { (data) in
-                    guard let dataDict = data.value as? [String: AnyObject] else { completion(groups: []); return }
+                    guard let dataDict = data.value as? [String: AnyObject] else { if count == 0 { dispatch_group_leave(dispatchGroup)}; return }
                     if let group = Group(dictionary: dataDict, id: groupID) {
                         groups.append(group)
                     }
-                    dispatch_group_leave(dispatchGroup)
+                    if count == 0 {
+                        dispatch_group_leave(dispatchGroup)
+                    } 
                 })
             }
             dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), { 
                 completion(groups: groups)
+                count = 1
             })
         }
+    }
+    
+    static func observeSingleGroup(groupID: String, completion: (group: Group?) -> Void) {
+        let ref = FirebaseController.ref.child("groups").child(groupID)
+        ref.observeEventType(.Value, withBlock:  { (data) in
+            guard let dataDict = data.value as? [String:AnyObject] else { completion(group: nil); return }
+            if let group = Group(dictionary: dataDict, id: groupID) {
+                completion(group: group)
+            } else {
+                completion(group: nil)
+            }
+        })
     }
     
     static func observeMessagesInSingleGroup(groupID: String, completion: (messages: [Message]) -> Void) {
@@ -64,6 +79,7 @@ class GroupController {
     
     static func observeMessagesInGroups(groups: [Group], completion: (messages: [Message]) -> Void) {
         let groupIDs = groups.map({$0.id})
+        var count = 0
         var messages: [Message] = [Message]()
         let dispatchGroup = dispatch_group_create()
         for groupID in groupIDs {
@@ -71,15 +87,20 @@ class GroupController {
                 dispatch_group_enter(dispatchGroup)
                 let messageRef = FirebaseController.ref.child("messages").queryOrderedByChild(kGroupID).queryEqualToValue(groupID)
                 messageRef.observeEventType(.Value, withBlock:  { (data) in
-                    guard let dataDict = data.value as? [String : [String: AnyObject]] else { dispatch_group_leave(dispatchGroup); return }
+                    guard let dataDict = data.value as? [String : [String: AnyObject]] else { if count == 0 {dispatch_group_leave(dispatchGroup)}; return }
                     let newMessages = dataDict.flatMap({Message(dictionary: $0.1, id: $0.0)})
                     messages += newMessages
-                    dispatch_group_leave(dispatchGroup)
+                    if count == 0 {
+                        dispatch_group_leave(dispatchGroup)
+                    } else {
+                        completion(messages: newMessages)
+                    }
                 })
             }
         }
         dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), {
             completion(messages: messages)
+            count = 1
         })
     }
 }

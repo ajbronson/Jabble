@@ -14,10 +14,14 @@ class DetailMessageTableViewCell: UITableViewCell {
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var textMessageLabel: UILabel!
     
+    var delegate: importantButtonProtocol?
+    var showImportant: Bool = false
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         textMessageLabel.lineBreakMode = .ByWordWrapping
         textMessageLabel.numberOfLines = 0
+        showImportant = false
     }
     
     func updateWith(users: [User], message: Message) {
@@ -28,11 +32,34 @@ class DetailMessageTableViewCell: UITableViewCell {
         }
         
         if message.userID != LoginPersistenceController.loggedInUserID {
-            importantMessage.hidden = true
+            importantMessage.setImage(UIImage(named: "noImage"), forState: .Normal)
+        } else {
+            if message.important {
+                importantMessage.setImage(UIImage(named: "important"), forState: .Normal)
+            } else {
+                importantMessage.setImage(UIImage(named: "notImportant"), forState: .Normal)
+            }
+        }
+        
+        if showImportant {
+            importantMessage.setImage(UIImage(named: "important"), forState: .Normal)
         }
     }
+    
 
     @IBAction func importantButtonTapped(sender: AnyObject) {
-        
+        self.delegate?.importantButtonToggle(self)
     }
+    
+    func setImageImportant(important: Bool) {
+        if important {
+             importantMessage.setImage(UIImage(named: "important"), forState: .Normal)
+        } else {
+            importantMessage.setImage(UIImage(named: "notImportant"), forState: .Normal)
+        }
+    }
+}
+
+protocol importantButtonProtocol {
+    func importantButtonToggle(sender: DetailMessageTableViewCell)
 }

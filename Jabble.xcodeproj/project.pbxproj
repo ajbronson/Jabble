@@ -14,6 +14,7 @@
 		2103CA8D1D0A0CF5002175AC /* SearchTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2103CA8C1D0A0CF5002175AC /* SearchTableViewController.swift */; };
 		2103CA8F1D0A0CFC002175AC /* SearchResultsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2103CA8E1D0A0CFC002175AC /* SearchResultsTableViewController.swift */; };
 		2103CA931D0A3127002175AC /* LoginPersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2103CA921D0A3127002175AC /* LoginPersistenceController.swift */; };
+		21809DB61D11D21D007BAABE /* ImportantTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21809DB51D11D21D007BAABE /* ImportantTableViewController.swift */; };
 		219A05001D0F5FDE00311442 /* DetailMessageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219A04FF1D0F5FDE00311442 /* DetailMessageViewController.swift */; };
 		21B55C891D08B53F00728D5E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21B55C881D08B53F00728D5E /* User.swift */; };
 		21B55C8B1D08B54300728D5E /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21B55C8A1D08B54300728D5E /* Message.swift */; };
@@ -43,6 +44,7 @@
 		2103CA8C1D0A0CF5002175AC /* SearchTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchTableViewController.swift; sourceTree = "<group>"; };
 		2103CA8E1D0A0CFC002175AC /* SearchResultsTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultsTableViewController.swift; sourceTree = "<group>"; };
 		2103CA921D0A3127002175AC /* LoginPersistenceController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginPersistenceController.swift; sourceTree = "<group>"; };
+		21809DB51D11D21D007BAABE /* ImportantTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImportantTableViewController.swift; sourceTree = "<group>"; };
 		219A04FF1D0F5FDE00311442 /* DetailMessageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailMessageViewController.swift; sourceTree = "<group>"; };
 		21B55C881D08B53F00728D5E /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		21B55C8A1D08B54300728D5E /* Message.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
@@ -134,6 +136,7 @@
 			children = (
 				219A05011D10648C00311442 /* Login/Signup */,
 				219A05021D10649800311442 /* Search */,
+				21809DB51D11D21D007BAABE /* ImportantTableViewController.swift */,
 				219A04FF1D0F5FDE00311442 /* DetailMessageViewController.swift */,
 				2103CA8A1D0A0CEF002175AC /* CreateGroupTableViewController.swift */,
 				2103CA821D0A0CBD002175AC /* AllMessagesTableViewController.swift */,
@@ -344,6 +347,7 @@
 				21D2F6361D0B112A00BE1803 /* CreateButtonTableViewCell.swift in Sources */,
 				21D2F62F1D0B0C4600BE1803 /* DetailMessageTableViewCell.swift in Sources */,
 				21B55C8B1D08B54300728D5E /* Message.swift in Sources */,
+				21809DB61D11D21D007BAABE /* ImportantTableViewController.swift in Sources */,
 				219A05001D0F5FDE00311442 /* DetailMessageViewController.swift in Sources */,
 				21B55C9D1D08D70400728D5E /* GroupController.swift in Sources */,
 				21B55C891D08B53F00728D5E /* User.swift in Sources */,

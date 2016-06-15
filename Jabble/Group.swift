@@ -92,4 +92,17 @@ class Group: FirebaseType {
         }
     }
     
+    func delete() {
+        guard let id = id else { return }
+        FirebaseController.ref.child(endpoint).child(id).removeValue()
+        let messageRef = FirebaseController.ref.child("messages").queryOrderedByChild(kGroupID).queryEqualToValue(id)
+        messageRef.observeEventType(.Value, withBlock:  { (data) in
+            guard let dataDict = data.value as? [String : [String: AnyObject]] else { return }
+            let newMessages = dataDict.flatMap({Message(dictionary: $0.1, id: $0.0)})
+            for message in newMessages {
+                message.delete()
+            }
+        })
+    }
+    
 }

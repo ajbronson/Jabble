@@ -29,8 +29,6 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     var filteredUsers = [User]()
     var addedMembers = [User]()
     
-    var showUsers = false
-    
     
     
     override func didReceiveMemoryWarning() {
@@ -64,14 +62,17 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     
     
     func createGroupTapped() {
+        FirebaseController.ref.child("users").removeAllObservers()
         if let group = group {
-            guard let name = nameTextField?.text where name.characters.count > 0 else { showAlert(); return }
+            guard let name = nameTextField?.text,
+                let loggedInUserID = LoginPersistenceController.loggedInUserID where name.characters.count > 0 && addedMembers.count > 0 else { showAlert(); return }
             group.name = name
-            
-            //TODO: Finish adding the addition and subtraction of members here!
+            var userIDs = addedMembers.flatMap({$0.id})
+            saveDeleteUsers(group.userIDs, newIds: userIDs, groupID: group.id)
+            userIDs.append(loggedInUserID)
+            group.userIDs = userIDs
             group.save()
         } else {
-            FirebaseController.ref.child("users").removeAllObservers()
             guard let user = UserController.currentUser, id = user.id, name = name where name.characters.count > 0 && addedMembers.count > 0  else { showAlert(); return }
             var memberIDs = addedMembers.flatMap({$0.id})
             memberIDs.append(id)
@@ -189,7 +190,6 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
            return true
         }
      }
- 
     
     
     // Override to support editing the table view.
@@ -204,12 +204,13 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
             let index = NSIndexPath(forRow: filteredUsers.count - 1, inSection: 1)
             self.tableView.insertRowsAtIndexPaths([index], withRowAnimation: .Left)
             
+            tableView.reloadSectionIndexTitles()
+            
             addedMembers.removeAtIndex(indexPath.row - 1)
             tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
             
             tableView.endUpdates()
         }
-        
     }
     
     
@@ -269,22 +270,38 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     }
     
     func becameFirstResponder() {
-        showUsers = true
         UserController.fetchAllUsers { (users) in
             guard let id = LoginPersistenceController.loggedInUserID else { return }
+            
+            if self.allUsers.count > 0 {
+                self.allUsers.removeAll()
+                var indexPaths = [NSIndexPath]()
+                for i in 0..<self.filteredUsers.count {
+                    indexPaths.append(NSIndexPath(forRow: i, inSection: 1))
+                }
+                self.filteredUsers.removeAll()
+                self.tableView.deleteRowsAtIndexPaths(indexPaths, withRowAnimation: .Right)
+            }
+            
             self.allUsers = users.filter({$0.id != id})
+            for user in self.addedMembers {
+                self.allUsers = self.allUsers.filter({$0.id != user.id})
+            }
             self.filteredUsers = self.allUsers
+            self.filteredUsers = self.filteredUsers.sort({$0.displayName < $1.displayName})
+            self.allUsers = self.allUsers.sort({$0.displayName < $1.displayName})
+
             
             var indexPaths: [NSIndexPath] = [NSIndexPath]()
-            for i in 0...self.allUsers.count - 1 {
+            for i in 0..<self.allUsers.count {
                 indexPaths.append(NSIndexPath(forRow: i, inSection: 1))
             }
+            self.tableView.reloadSectionIndexTitles()
             self.tableView.insertRowsAtIndexPaths(indexPaths, withRowAnimation: .Left)
         }
     }
     
     func resignedFirstResponder() {
-        showUsers = false
         var indexPaths = [NSIndexPath]()
         for i in 0..<filteredUsers.count {
             indexPaths.append(NSIndexPath(forItem: i, inSection: 1))
@@ -353,11 +370,23 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
                     filteredUsers.removeAtIndex(index)
                 }
             }
-            
             tableView.endUpdates()
         }
     
     }
+    
+//    override func scrollViewDidScroll(scrollView: UIScrollView) {
+//        let indexPath = tableView.indexPathsForVisibleRows
+//        if let indexPath = indexPath?.first {
+//            if indexPath.section == 0 && indexPath.row == numberOfAddedUsers + 1 {
+//                let reloadIndexPath = NSIndexPath(forRow: numberOfAddedUsers + 1, inSection: 0)
+//                let toIndexPath = NSIndexPath(forRow: numberOfAddedUsers + 1, inSection: 0)
+//                if let _ = tableView.cellForRowAtIndexPath(reloadIndexPath) as? CreateButtonTableViewCell {
+//                    tableView.moveRowAtIndexPath(reloadIndexPath, toIndexPath: toIndexPath)
+//                }
+//            }
+//        }
+//    }
     
     func updateWith(group: Group) {
         self.group = group
@@ -367,6 +396,34 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
             self.addedMembers = users.filter({$0.id != id})
             self.numberOfAddedUsers = self.addedMembers.count
             self.tableView.reloadData()
+        }
+    }
+    
+    func saveDeleteUsers(groupsUserIDs: [String], newIds: [String], groupID: String?) {
+        for newID in newIds {
+            if !groupsUserIDs.contains(newID) {
+                //save it to the user
+                UserController.fetchUserWith(newID, completion: { (user) in
+                    var user = user
+                    user?.groupIDs.append(newID)
+                    user?.save()
+                })
+            }
+        }
+        
+        for groupUserID in groupsUserIDs {
+            guard let id = LoginPersistenceController.loggedInUserID,
+                let groupID = groupID else { return }
+            if !newIds.contains(groupUserID) && groupUserID != id {
+                //remove it from the user
+                UserController.fetchUserWith(groupUserID, completion: { (user) in
+                    var user = user
+                    if let index = user?.groupIDs.indexOf(groupID) {
+                        user?.groupIDs.removeAtIndex(index)
+                    }
+                    user?.save()
+                })
+            }
         }
     }
 }

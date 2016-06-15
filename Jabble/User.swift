@@ -29,13 +29,15 @@ class User: FirebaseType, Equatable {
     var groupIDs: [String]
     var id: String?
     
-    init(firstName: String, lastName: String, email: String, displayName: String, groups: [String]?, dateCreated:NSTimeInterval = NSDate().timeIntervalSince1970, id: String) {
+    init(firstName: String, lastName: String, email: String, displayName: String, groups: [String]?, dateCreated:NSTimeInterval = NSDate().timeIntervalSince1970, id: String?) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
         self.displayName = displayName
         self.dateCreated = dateCreated
-        self.id = id
+        if let id = id {
+            self.id = id
+        }
         if let groups = groups {
             self.groupIDs = groups
         } else {

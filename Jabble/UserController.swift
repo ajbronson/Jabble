@@ -90,5 +90,18 @@ class UserController {
             }
         })
     }
+    
+    static func observeUserForNewGroups(userID: String, completion: (groupIDs: [String]) -> Void) {
+        let groupRef = FirebaseController.ref.child("users").child(userID)
+        groupRef.observeEventType(.Value, withBlock:  { (data) in
+            guard let dataDict = data.value as? [String: AnyObject] else { completion(groupIDs: []); return }
+            let user = User(dictionary: dataDict, id: userID)
+            if let groupIDs = user?.groupIDs {
+                completion(groupIDs: groupIDs)
+            } else {
+                completion(groupIDs: [])
+            }
+        })
+    }
 
 }
