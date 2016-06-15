@@ -12,11 +12,11 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         tableView.estimatedRowHeight = 44
         tableView.rowHeight = UITableViewAutomaticDimension
     }
     
+    var group: Group?
     
     var member: String?
     var name: String?
@@ -64,17 +64,22 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
     
     
     func createGroupTapped() {
-        
-        FirebaseController.ref.child("users").removeAllObservers()
-        guard let user = UserController.currentUser, id = user.id, name = name where name.characters.count > 0 && addedMembers.count > 0  else { showAlert(); return }
-        var memberIDs = addedMembers.flatMap({$0.id})
-        memberIDs.append(id)
-        let group = Group(type: "Closed", kingID: id, name: name, users: memberIDs)
-        group.save()
+        if let group = group {
+            guard let name = nameTextField?.text where name.characters.count > 0 else { showAlert(); return }
+            group.name = name
+            
+            //TODO: Finish adding the addition and subtraction of members here!
+            group.save()
+        } else {
+            FirebaseController.ref.child("users").removeAllObservers()
+            guard let user = UserController.currentUser, id = user.id, name = name where name.characters.count > 0 && addedMembers.count > 0  else { showAlert(); return }
+            var memberIDs = addedMembers.flatMap({$0.id})
+            memberIDs.append(id)
+            let group = Group(type: "Closed", kingID: id, name: name, users: memberIDs)
+            group.save()
+        }
         sleep(1)
         dismissViewControllerAnimated(true, completion: nil)
-        
-        
     }
     
     
@@ -90,6 +95,9 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
                     let cell = tableView.dequeueReusableCellWithIdentifier("nameCell", forIndexPath: indexPath) as? GroupNameTableViewCell
                     cell?.delegate = self
                     self.nameTextField = cell?.nameTextField
+                    if let group = group {
+                        nameTextField?.text = group.name
+                    }
                     return cell ?? UITableViewCell()
                     
                 case 1 :
@@ -102,6 +110,9 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
                 case 2:
                     let cell = tableView.dequeueReusableCellWithIdentifier("createGroupCell", forIndexPath: indexPath) as? CreateButtonTableViewCell
                     cell?.delegate = self
+                    if let _ = group {
+                        cell?.createButtonText.setTitle("Save", forState: .Normal)
+                    }
                     return cell ?? UITableViewCell()
                     
                 default:
@@ -118,6 +129,9 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
                     let cell = tableView.dequeueReusableCellWithIdentifier("nameCell", forIndexPath: indexPath) as? GroupNameTableViewCell
                     cell?.delegate = self
                     self.nameTextField = cell?.nameTextField
+                    if let group = group {
+                        nameTextField?.text = group.name
+                    }
                     return cell ?? UITableViewCell()
                     
                 case 1...numberOfAddedUsers:
@@ -343,6 +357,17 @@ class CreateGroupTableViewController: UITableViewController, createGroupProtocol
             tableView.endUpdates()
         }
     
+    }
+    
+    func updateWith(group: Group) {
+        self.group = group
+        self.title = "Edit Group"
+        UserController.fetchMultipleUsersWith(group.userIDs) { (users) in
+            guard let id = LoginPersistenceController.loggedInUserID else { return }
+            self.addedMembers = users.filter({$0.id != id})
+            self.numberOfAddedUsers = self.addedMembers.count
+            self.tableView.reloadData()
+        }
     }
 }
 

@@ -20,6 +20,7 @@ class CreateButtonTableViewCell: UITableViewCell, createGroupProtocol {
         self.delegate?.createGroupTapped()
     }
     
+    @IBOutlet weak var createButtonText: UIButton!
 }
 
 protocol createGroupProtocol {

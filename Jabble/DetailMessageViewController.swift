@@ -25,8 +25,11 @@ class DetailMessageViewController: UIViewController, UITableViewDelegate, UITabl
         observeMessages()
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: self.view.window)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: self.view.window)
-        if let group = group {
+        if let group = group, id = LoginPersistenceController.loggedInUserID {
             self.title = group.name
+            if group.kingID != id {
+                self.navigationItem.rightBarButtonItem = nil
+            }
         }
     }
     
@@ -123,5 +126,17 @@ class DetailMessageViewController: UIViewController, UITableViewDelegate, UITabl
         importantTableView.registerClass(UITableViewCell.self, forCellReuseIdentifier: "cell")
         self.view.addSubview(importantTableView)
     }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "toGroupDetail" {
+            guard let detailVC = segue.destinationViewController.childViewControllers[0] as? CreateGroupTableViewController,
+            let group = group else { return }
+            let _ = detailVC.view
+            detailVC.updateWith(group)
+        }
+    }
+    
+    
+    //toGroupDetail
 }
 
